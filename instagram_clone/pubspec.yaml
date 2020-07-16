@@ -1,0 +1,40 @@
+name: instagram_clone
+description: An Instagram clone project.
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=2.2.2 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Dependency Injection
+  get_it: ^4.0.2
+  # State management
+  flutter_bloc: ^4.0.0
+  # Value equality (flutter uses reference equality by default)
+  equatable: ^1.1.1
+  # Functional programming utils
+  dartz: ^0.9.0
+  # Http calls
+  http: ^0.12.1
+  # local cache
+  shared_preferences: ^0.5.7
+  image_picker: ^0.6.5+3
+  image_cropper: ^1.2.1
+  # Video player
+  chewie: ^0.9.10
+  video_player: ^0.10.9+1
+  stomp_dart_client: ^0.3.2
+  # Chat bubble widgets
+  bubble: ^1.1.9+1
+
+dev_dependencies:
+  lint: ^1.1.1
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - config/

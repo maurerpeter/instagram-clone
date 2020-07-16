@@ -1,0 +1,122 @@
+version: "3.7"
+services:
+  #! REVERSE PROXY
+
+  reverse-proxy:
+    build: ./reverse-proxy
+    ports:
+      - "4000:4000"
+    restart: always
+
+  #! MESSAGE BROKER
+
+  internal-message-broker:
+    container_name: internal_message_broker
+    build: ./rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+      - "15674:15674"
+
+  #! AUTH SERVICE
+
+  auth-service-db:
+    image: postgres:12.2-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: auth-service
+    restart: always
+    expose:
+      - "5433"
+    command: -p 5433
+
+  auth-service:
+    depends_on:
+      - reverse-proxy
+      - auth-service-db
+      - user-service
+    container_name: auth-service
+    environment:
+      DATABASE_CONNECTION_STRING: postgres://postgres:postgres@auth-service-db:5433/auth-service
+      USER_SERVICE_URL: http://user-service:3002
+    build: ./auth-service
+    restart: always
+
+  #! USER SERVICE
+
+  user-service-db:
+    image: postgres:12.2-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: user-service
+    restart: always
+    expose:
+      - "5435"
+    command: -p 5435
+
+  user-service:
+    depends_on:
+      - reverse-proxy
+      - internal-message-broker
+      - user-service-db
+    container_name: user-service
+    environment:
+      DATABASE_CONNECTION_STRING: postgres://postgres:postgres@user-service-db:5435/user-service
+      AMQP_URL: amqp://guest:guest@internal_message_broker:5672/
+      PUBLIC_URL: https://b0102b88.ngrok.io
+    build: ./user-service
+    restart: always
+
+  #! POST SERVICE
+
+  post-service-db:
+    image: postgres:12.2-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: post-service
+    restart: always
+    expose:
+      - "5434"
+    command: -p 5434
+
+  post-service:
+    depends_on:
+      - reverse-proxy
+      - post-service-db
+      - user-service
+    container_name: post-service
+    environment:
+      DATABASE_CONNECTION_STRING: postgres://postgres:postgres@post-service-db:5434/post-service
+      AMQP_URL: amqp://guest:guest@internal_message_broker:5672/
+      PUBLIC_URL: https://b0102b88.ngrok.io
+    build: ./post-service
+    restart: always
+
+  #! POST SERVICE
+
+  chat-service-db:
+    image: postgres:12.2-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: chat-service
+    restart: always
+    expose:
+      - "5435"
+    command: -p 5435
+
+  chat-service:
+    depends_on:
+      - reverse-proxy
+      - chat-service-db
+      - user-service
+    container_name: chat-service
+    environment:
+      DATABASE_CONNECTION_STRING: postgres://postgres:postgres@chat-service-db:5435/chat-service
+      AMQP_URL: amqp://guest:guest@internal_message_broker:5672/
+    build: ./chat-service
+    restart: always
